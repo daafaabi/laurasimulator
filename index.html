@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Laura-Simulator v3 — Chaos Arcade</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<header class="topbar">
+  <h1>🍼 Laura-Simulator v3</h1>
+  <div class="top-actions">
+    <button id="soundBtn" class="ghost" aria-pressed="false">🔈 Sound</button>
+    <button id="hapticsBtn" class="ghost" aria-pressed="true">📳 Haptics</button>
+    <button id="helpBtn" class="ghost">❓</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hud">
+    <div class="stat">
+      <div class="label">Score</div>
+      <div class="big" id="scoreVal">0</div>
+    </div>
+    <div class="stat">
+      <div class="label">Combo</div>
+      <div class="bar"><div id="comboBar" class="fill good"></div></div>
+      <div class="val" id="comboVal">x1</div>
+    </div>
+    <div class="stat">
+      <div class="label">Chaos-Level</div>
+      <div class="bar"><div id="chaosBar" class="fill bad"></div></div>
+      <div class="val" id="chaosVal">0</div>
+    </div>
+    <div class="stat">
+      <div class="label">Zeit</div>
+      <div class="big" id="timeVal">03:00</div>
+    </div>
+  </section>
+
+  <section class="scene">
+    <div class="laura">
+      <div class="face">
+        <div class="eye left"></div>
+        <div class="eye right"></div>
+        <div class="mouth" id="mouth"></div>
+      </div>
+      <div id="bubble" class="bubble hidden">NEIN!!</div>
+      <div id="confetti" class="confetti"></div>
+    </div>
+
+    <div class="card">
+      <h2 id="prompt">—</h2>
+      <div id="choices" class="choices"></div>
+      <small class="hint">Shortcuts: <b>1</b>/<b>2</b>/<b>3</b></small>
+    </div>
+  </section>
+
+  <section class="log">
+    <h3>Feed</h3>
+    <ul id="logList"></ul>
+  </section>
+
+  <footer class="footer">
+    <button id="restartBtn">🔁 Neustart</button>
+    <div class="spacer"></div>
+    <div class="meta">Bestzeit: <span id="bestTime">00:00</span> · Highscore: <span id="bestScore">0</span></div>
+  </footer>
+</main>
+
+<!-- Hilfe -->
+<dialog id="help">
+  <h2>Wie geht's?</h2>
+  <p>Dies ist KEIN Erziehungsratgeber. Dies ist Chaos. Punkte farmen, Memes genießen, Laura trollt dich zurück.</p>
+  <ul>
+    <li><b>Score</b> hochhalten, <b>Chaos</b> niedrig halten.</li>
+    <li>Kette gute Antworten → <b>Combo</b> steigt → mehr Punkte.</li>
+    <li>Chaos ≥ 100 → <b>Bosskampf</b> (QTE). Fail = L.</li>
+    <li>Shortcuts 1/2/3, Haptics optional.</li>
+  </ul>
+  <form method="dialog"><button>lol ok</button></form>
+</dialog>
+
+<!-- Bossfight -->
+<dialog id="boss">
+  <h2>🔥 ULTRA-MELTDOWN (QTE)</h2>
+  <p id="bossText">Drücke die Sequenz bevor die Leiste voll ist!</p>
+  <div class="bossbars">
+    <div class="bbar">
+      <div class="bLabel">Rage</div>
+      <div class="bMeter"><div id="bossRage" class="bFill bad"></div></div>
+    </div>
+    <div class="sequence" id="seq"></div>
+  </div>
+  <div class="keys">
+    <kbd>J</kbd><kbd>K</kbd><kbd>L</kbd><kbd>;</kbd>
+  </div>
+  <form method="dialog"><button id="bossGiveUp" class="ghost">Ich nehm die L</button></form>
+</dialog>
+
+<!-- Ende -->
+<dialog id="end">
+  <h2 id="endTitle">—</h2>
+  <p id="endText">—</p>
+  <form method="dialog"><button id="playAgain">Nochmal</button></form>
+</dialog>
+
+<script src="script.js"></script>
+</body>
+</html>
