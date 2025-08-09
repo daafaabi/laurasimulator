@@ -1,110 +1,299 @@
 <!doctype html>
 <html lang="de">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Laura-Simulator v3 — Chaos Arcade</title>
-  <link rel="stylesheet" href="style.css"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Laura‑Simulator V6 — Quiz‑Chaos</title>
+  <meta name="theme-color" content="#0f1220" />
+  <style>
+    :root{--bg:#0f1220;--ink:#e8ecf1;--muted:#9aa3b2;--panel:#171a2b;--line:#242846;--accent:#86e1ff;--good:#3ddc97;--bad:#ff7a90;--tap:56px}
+    *{box-sizing:border-box}html,body{height:100%}html{color-scheme:dark}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:radial-gradient(1200px 600px at 20% -10%,#1a2040 0,#0f1220 60%),var(--bg);color:var(--ink)}
+    header{position:sticky;top:0;z-index:10;display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line);background:#0f1220cc;backdrop-filter:saturate(140%) blur(6px)}
+    .title{font-weight:700}
+    .toolbar{display:flex;gap:8px}
+    .btn{appearance:none;border:1px solid var(--line);background:#121633;color:var(--ink);border-radius:12px;padding:10px 14px;cursor:pointer}
+    .btn.ghost{background:transparent}
+
+    .wrap{max-width:960px;margin:0 auto;padding:12px;display:grid;gap:12px}
+    .grid{display:grid;gap:12px}
+    @media(min-width:900px){.grid{grid-template-columns:1.1fr .9fr}}
+
+    .panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px}
+    .hud{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+    .stat{display:grid;gap:6px}
+    .label{font-size:12px;color:var(--muted);display:flex;justify-content:space-between}
+    .bar{height:10px;background:#0c0f1f;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+    .fill{height:100%;width:0%;transition:width .2s}
+    .good{background:linear-gradient(90deg,#39c78f,var(--good))}
+    .bad{background:linear-gradient(90deg,#ff6480,var(--bad))}
+    .accent{background:linear-gradient(90deg,#3da2ff,var(--accent))}
+
+    .card h2{margin:0 0 8px 0}
+    .qmeta{display:flex;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:12px}
+    .choices{display:grid;gap:10px;margin-top:8px}
+    .choice{min-height:var(--tap);background:#0c1024;color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:12px 14px;text-align:left;cursor:pointer}
+    .choice.correct{border-color:#3ddc97}
+    .choice.wrong{border-color:#ff7a90}
+
+    .lifes{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+    .life{background:#121633;border:1px solid var(--line);color:var(--ink);border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer}
+    .life[disabled]{opacity:.5;cursor:not-allowed}
+
+    .feed{max-height:260px;overflow:auto}
+    .feed ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+    .feed li{font-size:14px;color:#d7dbee}
+
+    .avatar{display:grid;place-items:center;position:relative;overflow:hidden}
+    .face{width:180px;height:180px;border-radius:50%;position:relative;background:radial-gradient(circle at 40% 35%,#ffdfdf,#ffc6c6 58%,#f7a6a6 100%);border:4px solid #35222a;box-shadow:0 10px 40px #0006}
+    .eye{width:18px;height:18px;background:#000;border-radius:50%;position:absolute;top:62px}
+    .eye.left{left:46px}.eye.right{right:46px}
+    .mouth{width:72px;height:26px;border-radius:0 0 40px 40px;background:#7b1e2a;position:absolute;bottom:56px;left:50%;transform:translateX(-50%)}
+    .cry{animation:cry .8s infinite}
+    @keyframes cry{0%{height:26px}50%{height:42px;background:#8c2030}100%{height:26px}}
+    .bubble{position:absolute;bottom:10px;left:10px;background:#2a2f55;border:1px solid #3a4080;padding:8px 10px;border-radius:10px;max-width:280px}
+    .hidden{opacity:0}
+    .confetti{pointer-events:none;position:absolute;inset:0}
+
+    .bottom{position:sticky;bottom:0;display:flex;gap:10px;justify-content:space-between;align-items:center;padding:10px 12px;background:#0f1220cc;border-top:1px solid var(--line);backdrop-filter:saturate(140%) blur(6px)}
+    .meta{color:var(--muted);font-size:14px}
+
+    dialog{background:#0f1220;color:var(--ink);border:1px solid var(--line);border-radius:14px;padding:16px;max-width:640px}
+    dialog::backdrop{background:#0006}
+    .kbd kbd{display:inline-block;border:1px solid var(--line);border-radius:6px;padding:4px 8px;margin-right:6px}
+
+    @media(prefers-reduced-motion:reduce){.fill{transition:none}.cry{animation:none}}
+  </style>
 </head>
 <body>
-<header class="topbar">
-  <h1>🍼 Laura-Simulator v3</h1>
-  <div class="top-actions">
-    <button id="soundBtn" class="ghost" aria-pressed="false">🔈 Sound</button>
-    <button id="hapticsBtn" class="ghost" aria-pressed="true">📳 Haptics</button>
-    <button id="helpBtn" class="ghost">❓</button>
+<header>
+  <div class="title">🍼 Laura‑Simulator — Quiz‑Chaos</div>
+  <div class="toolbar">
+    <button id="soundBtn" class="btn ghost" aria-pressed="false">🔈 Sound</button>
+    <button id="helpBtn" class="btn ghost">❓</button>
   </div>
 </header>
 
 <main class="wrap">
-  <section class="hud">
+  <section class="panel hud">
     <div class="stat">
-      <div class="label">Score</div>
-      <div class="big" id="scoreVal">0</div>
+      <div class="label"><span>Score</span><span id="scoreT">0</span></div>
+      <div class="bar"><div id="scoreB" class="fill accent" style="width:0%"></div></div>
     </div>
     <div class="stat">
-      <div class="label">Combo</div>
-      <div class="bar"><div id="comboBar" class="fill good"></div></div>
-      <div class="val" id="comboVal">x1</div>
+      <div class="label"><span>Streak</span><span id="streakT">x1</span></div>
+      <div class="bar"><div id="streakB" class="fill good" style="width:0%"></div></div>
     </div>
     <div class="stat">
-      <div class="label">Chaos-Level</div>
-      <div class="bar"><div id="chaosBar" class="fill bad"></div></div>
-      <div class="val" id="chaosVal">0</div>
+      <div class="label"><span>Chaos</span><span id="chaosT">0</span></div>
+      <div class="bar"><div id="chaosB" class="fill bad" style="width:0%"></div></div>
     </div>
     <div class="stat">
-      <div class="label">Zeit</div>
-      <div class="big" id="timeVal">03:00</div>
+      <div class="label"><span>Zeit</span><span id="timeT">03:00</span></div>
+      <div class="bar"><div id="timeB" class="fill accent" style="width:100%"></div></div>
     </div>
   </section>
 
-  <section class="scene">
-    <div class="laura">
-      <div class="face">
+  <section class="grid">
+    <div class="panel card">
+      <h2 id="qTitle">—</h2>
+      <div class="qmeta">
+        <span id="qType">—</span>
+        <span id="qInfo">Runde 1</span>
+      </div>
+      <div id="qBody"></div>
+      <div class="choices" id="choices"></div>
+      <div class="lifes">
+        <button class="life" id="life5050">50/50</button>
+        <button class="life" id="lifeSkip">Skip</button>
+        <button class="life" id="lifeFreeze">Freeze ⏱️</button>
+        <button class="life" id="lifeReveal">Cheat 👀</button>
+      </div>
+      <small class="hint kbd">Shortcuts: <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><kbd>4</kbd> · Lifelines: <kbd>F</kbd> 50/50, <kbd>S</kbd> Skip, <kbd>T</kbd> Freeze, <kbd>R</kbd> Reveal</small>
+    </div>
+
+    <div class="panel avatar">
+      <div class="face" aria-hidden="true">
         <div class="eye left"></div>
         <div class="eye right"></div>
         <div class="mouth" id="mouth"></div>
       </div>
       <div id="bubble" class="bubble hidden">NEIN!!</div>
       <div id="confetti" class="confetti"></div>
-    </div>
-
-    <div class="card">
-      <h2 id="prompt">—</h2>
-      <div id="choices" class="choices"></div>
-      <small class="hint">Shortcuts: <b>1</b>/<b>2</b>/<b>3</b></small>
+      <div class="feed" style="margin-top:12px;width:100%">
+        <h3 style="margin:8px 0">Feed</h3>
+        <ul id="feed"></ul>
+      </div>
     </div>
   </section>
-
-  <section class="log">
-    <h3>Feed</h3>
-    <ul id="logList"></ul>
-  </section>
-
-  <footer class="footer">
-    <button id="restartBtn">🔁 Neustart</button>
-    <div class="spacer"></div>
-    <div class="meta">Bestzeit: <span id="bestTime">00:00</span> · Highscore: <span id="bestScore">0</span></div>
-  </footer>
 </main>
 
-<!-- Hilfe -->
+<footer class="bottom">
+  <button id="restart" class="btn">🔁 Neustart</button>
+  <div class="meta">Bestzeit: <span id="bestTime">00:00</span> · Highscore: <span id="bestScore">0</span></div>
+</footer>
+
 <dialog id="help">
-  <h2>Wie geht's?</h2>
-  <p>Dies ist KEIN Erziehungsratgeber. Dies ist Chaos. Punkte farmen, Memes genießen, Laura trollt dich zurück.</p>
+  <h2>Quiz‑Chaos — so läuft’s</h2>
   <ul>
-    <li><b>Score</b> hochhalten, <b>Chaos</b> niedrig halten.</li>
-    <li>Kette gute Antworten → <b>Combo</b> steigt → mehr Punkte.</li>
-    <li>Chaos ≥ 100 → <b>Bosskampf</b> (QTE). Fail = L.</li>
-    <li>Shortcuts 1/2/3, Haptics optional.</li>
+    <li>Es gibt **verschiedene Fragetypen** (MC, Wahr/Falsch, Reihenfolge, Emojis erraten).</li>
+    <li>Richtige Antworten bauen <b>Streak</b> → Multiplikator. Falsche erhöhen <b>Chaos</b>.</li>
+    <li>Bei Chaos ≥ 100 startet ein **Bosskampf** (echte Action‑Phase).</li>
+    <li><b>Lifelines</b>: 50/50, Skip, Timer‑Freeze (5s), Reveal (zeigt kurz die richtige Option).</li>
   </ul>
-  <form method="dialog"><button>lol ok</button></form>
+  <form method="dialog"><button class="btn">Okay</button></form>
 </dialog>
 
-<!-- Bossfight -->
-<dialog id="boss">
-  <h2>🔥 ULTRA-MELTDOWN (QTE)</h2>
-  <p id="bossText">Drücke die Sequenz bevor die Leiste voll ist!</p>
-  <div class="bossbars">
-    <div class="bbar">
-      <div class="bLabel">Rage</div>
-      <div class="bMeter"><div id="bossRage" class="bFill bad"></div></div>
-    </div>
-    <div class="sequence" id="seq"></div>
-  </div>
-  <div class="keys">
-    <kbd>J</kbd><kbd>K</kbd><kbd>L</kbd><kbd>;</kbd>
-  </div>
-  <form method="dialog"><button id="bossGiveUp" class="ghost">Ich nehm die L</button></form>
-</dialog>
-
-<!-- Ende -->
 <dialog id="end">
   <h2 id="endTitle">—</h2>
   <p id="endText">—</p>
-  <form method="dialog"><button id="playAgain">Nochmal</button></form>
+  <form method="dialog"><button id="again" class="btn">Nochmal</button></form>
 </dialog>
 
-<script src="script.js"></script>
+<script>
+// ===== Laura‑Simulator V6 — Quiz‑Chaos (mobile‑first) =====
+const $ = (s)=>document.querySelector(s);
+const ui = {
+  scoreT: $('#scoreT'), scoreB: $('#scoreB'), streakT: $('#streakT'), streakB: $('#streakB'),
+  chaosT: $('#chaosT'), chaosB: $('#chaosB'), timeT: $('#timeT'), timeB: $('#timeB'),
+  qTitle: $('#qTitle'), qType: $('#qType'), qInfo: $('#qInfo'), qBody: $('#qBody'), choices: $('#choices'),
+  feed: $('#feed'), mouth: $('#mouth'), bubble: $('#bubble'), confetti: $('#confetti'),
+  life5050: $('#life5050'), lifeSkip: $('#lifeSkip'), lifeFreeze: $('#lifeFreeze'), lifeReveal: $('#lifeReveal'),
+  soundBtn: $('#soundBtn'), helpBtn: $('#helpBtn'), help: $('#help'),
+  end: $('#end'), endTitle: $('#endTitle'), endText: $('#endText'), again: $('#again'), restart: $('#restart'),
+  bestTime: $('#bestTime'), bestScore: $('#bestScore'),
+};
+
+const S = { score:0, streak:1, chaos:0, time:180, round:1, running:true, tick:null, started:0, sound:false, audio:null, freeze:0, used:{f:false,s:false,t:false,r:false}, boss:false };
+
+// WebAudio
+function initAudio(){ if(S.audio) return; const ctx=new (window.AudioContext||window.webkitAudioContext)(); const g=ctx.createGain(); g.gain.value=0.22; g.connect(ctx.destination); S.audio={ctx,master:g}; }
+function tone(f=440,d=.12,t='sine',v=.35){ if(!S.sound||!S.audio) return; const {ctx,master}=S.audio; const o=ctx.createOscillator(), g=ctx.createGain(); o.type=t;o.frequency.value=f;g.gain.value=0;o.connect(g).connect(master); const n=ctx.currentTime; g.gain.linearRampToValueAtTime(v,n+.01); g.gain.exponentialRampToValueAtTime(.0001,n+d); o.start(n); o.stop(n+d+.02);} 
+const sfx={ ok:()=>{tone(620,.1,'triangle',.35); setTimeout(()=>tone(780,.12,'triangle',.3),90)}, bad:()=>tone(220,.2,'sawtooth',.45), click:()=>tone(760,.08,'square',.25), freeze:()=>tone(420,.1,'sine',.35), reveal:()=>tone(900,.08,'triangle',.35), win:()=>{tone(660,.12,'triangle',.5); setTimeout(()=>tone(880,.16,'triangle',.45),120)}, lose:()=>{tone(200,.2,'sawtooth',.5); setTimeout(()=>tone(160,.22,'sawtooth',.45),120)} };
+
+// Helpers
+function fmt(s){const m=String(Math.floor(s/60)).padStart(2,'0');const ss=String(s%60).padStart(2,'0');return `${m}:${ss}`}
+function log(t){ const li=document.createElement('li'); li.innerHTML=t; ui.feed.prepend(li); }
+function bubble(t,ms=1100){ ui.bubble.textContent=t; ui.bubble.classList.remove('hidden'); setTimeout(()=>ui.bubble.classList.add('hidden'),ms); }
+function cry(on){ ui.mouth.classList.toggle('cry', on); }
+function confetti(){ ui.confetti.innerHTML=''; for(let i=0;i<16;i++){ const sp=document.createElement('span'); sp.style.position='absolute'; sp.style.left=Math.random()*100+'%'; sp.style.top='-8px'; sp.style.fontSize=(12+Math.random()*12)+'px'; sp.textContent=['✨','🎉','🧃','🧸','🍪'][Math.floor(Math.random()*5)]; ui.confetti.appendChild(sp); const y=120+Math.random()*220; sp.animate([{transform:'translateY(0)'},{transform:`translateY(${y}px)`}],{duration:800+Math.random()*600,fill:'forwards'}); } }
+
+// Question bank (types)
+const Z = ["NEIN!!","FALSCH!!","IHHH","Cringe.","Langweilig.","MÖCHTE JETZT!"];
+const bank = [];
+function mc(q, answers, correct){ return {type:'MC', q, answers, correct}; }
+function tf(q, ans){ return {type:'TF', q, answers:['Wahr','Falsch'], correct: ans?0:1}; }
+function emoji(q, target){ // guess from emojis
+  const opts = shuffle([target, '🍪🧃', '🦖🏗️', '🦆🎤']).slice(0,4);
+  return {type:'Emoji', q, answers:opts, correct: opts.indexOf(target)};
+}
+function order(q, items){ // pick the earliest in order
+  const opts = shuffle(items.slice());
+  return {type:'Order', q:q+" – Was kommt zuerst?", answers: opts, correct: opts.indexOf(items[0])};
+}
+
+// Fill bank
+bank.push(mc('Laura will Quetschbanane aus der goldenen Schüssel. Was tust du?', ['Mit Gabel zerquetschen','Goldene Schüssel improvisieren','Banane dabben lassen','Toaster koppeln'], 0));
+bank.push(mc('Musik-Time. Nicht der Babyhai-Remix läuft. Womit rettest du die Stimmung?', ['Beatbox-Remix','Bluetooth mit Toaster','Ente als Mikro','UNO +4'], 0));
+bank.push(tf('Socken innen nach außen = neue Farbe?', true));
+bank.push(emoji('Was will Laura wirklich sagen?', '🍌➡️🥣✨'));
+bank.push(order('Abendroutine', ['Zähne putzen','Pyjama','Gute Nacht Lied','Licht aus']));
+
+function nextQuestion(){ const q = shuffle(bank)[0]; S.current = q; ui.qTitle.textContent = q.q; ui.qType.textContent = q.type; ui.qInfo.textContent = `Runde ${S.round}`; ui.qBody.innerHTML=''; ui.choices.innerHTML='';
+  const answers = q.answers.map((a,i)=>({i, t:a})); answers.forEach((o,idx)=>{ const b=document.createElement('button'); b.className='choice'; b.innerHTML = `<b>${idx+1}.</b> ${o.t}`; b.addEventListener('click', ()=> pick(o.i, b)); ui.choices.appendChild(b); });
+  // timer pulse
+}
+
+function pick(index, el){ if(!S.running || S.boss) return; sfx.click(); cry(true); bubble(Z[Math.floor(Math.random()*Z.length)]); setTimeout(()=>cry(false), 350);
+  const ok = index === S.current.correct; if(ok){
+    el.classList.add('correct'); sfx.ok(); confetti(); S.score += 100*S.streak; S.streak++; S.chaos = Math.max(0, S.chaos - 5); log(`✅ Richtig! (+${100*(S.streak-1)})`);
+  } else {
+    el.classList.add('wrong'); sfx.bad(); S.streak = Math.max(1, Math.floor(S.streak*0.6)); S.chaos = Math.min(100, S.chaos + 18); log('❌ Falsch! Laura rollt mit den Augen.');
+  }
+  updateHUD();
+  // small lockout then next
+  setTimeout(()=>{ S.round++; if(S.chaos>=100){ startBoss(); } else { nextQuestion(); } }, 650);
+}
+
+// Lifelines
+function use5050(){ if(S.used.f) return; S.used.f=true; sfx.click(); const nodes=[...ui.choices.children]; const wrong = nodes.filter((_,i)=> i!==S.current.correct); shuffle(wrong).slice(0, Math.max(1, wrong.length-1)).forEach(b=> b.disabled=true); ui.life5050.disabled=true; log('🧪 50/50 gezündet.'); }
+function useSkip(){ if(S.used.s) return; S.used.s=true; sfx.click(); nextQuestion(); ui.lifeSkip.disabled=true; log('⏭️ Skip. Neue Frage.'); }
+function useFreeze(){ if(S.used.t) return; S.used.t=true; sfx.freeze(); S.freeze = 5; ui.lifeFreeze.disabled=true; log('❄️ Timer eingefroren (5s).'); }
+function useReveal(){ if(S.used.r) return; S.used.r=true; sfx.reveal(); const nodes=[...ui.choices.children]; nodes[S.current.correct].classList.add('correct'); setTimeout(()=> nodes[S.current.correct].classList.remove('correct'), 800); ui.lifeReveal.disabled=true; log('👀 Reveal (kurz angezeigt).'); }
+
+// Bossfight (reuse from V5 but short auto phase)
+function startBoss(){ S.boss = true; log('🔥 Bosskampf startet! Laura dreht auf.'); bossBoot(); }
+
+// --- Mini boss engine (auto‑scroll, quick fight) ---
+let B=null;
+function bossBoot(){ B={t:0,last:0,dt:0, hp:100, php:100, rage:0, ifr:0}; const box=document.createElement('dialog'); box.id='bossBox'; box.innerHTML=`<h2>Boss: Mega‑Laura</h2>
+  <div class="label"><span>Dein Mut</span><span id="bMeT">100%</span></div>
+  <div class="bar"><div id="bMe" class="fill good" style="width:100%"></div></div>
+  <div class="label" style="margin-top:6px"><span>Laura HP</span><span id="bHpT">100</span></div>
+  <div class="bar"><div id="bHp" class="fill bad" style="width:100%"></div></div>
+  <p>Drück im Takt <kbd>J</kbd>/<kbd>K</kbd> wenn die Kreise die Mitte treffen!</p>
+  <canvas id="bossC" style="width:100%;height:220px"></canvas>
+  <form method="dialog"><button class="btn">Aufgeben</button></form>`;
+  document.body.appendChild(box); box.showModal();
+  const c = box.querySelector('#bossC'); const ctx=c.getContext('2d'); const DPR=Math.max(1,Math.min(2, window.devicePixelRatio||1)); c.width=c.getBoundingClientRect().width*DPR; c.height=220*DPR;
+  const me=box.querySelector('#bMe'), meT=box.querySelector('#bMeT'), hp=box.querySelector('#bHp'), hpT=box.querySelector('#bHpT');
+  const notes=[]; function spawn(){ const y=c.height*(.2+.6*Math.random()); const v= 160 + Math.random()*120; notes.push({x:c.width+20,y,v}); }
+  let my=100;
+  const key=(e)=>{ if(['j','k','J','K'].includes(e.key)){ // find nearest note close to center
+      const center=c.width*0.3; let best=null,bi=-1; for(let i=0;i<notes.length;i++){ const n=notes[i]; const d=Math.abs(n.x-center); if(d<30*DPR && (!best||d<best)){ best=d; bi=i; } }
+      if(bi>-1){ notes.splice(bi,1); my = Math.min(100, my+4); B.hp = Math.max(0, B.hp-6); sfx.ok(); confetti(); }
+      else { my = Math.max(0, my-8); sfx.bad(); }
+      me.style.width=my+'%'; meT.textContent=Math.round(my)+'%'; hp.style.width=(B.hp)+'%'; hpT.textContent=Math.round(B.hp);
+      if(B.hp<=0){ box.close(); box.remove(); S.boss=false; S.chaos=0; S.score+=500; nextQuestion(); updateHUD(); document.removeEventListener('keydown', key); cancelAnimationFrame(anim); }
+    } };
+  document.addEventListener('keydown', key);
+  function step(ts){ if(!B.last) B.last=ts; B.dt=Math.min(.033,(ts-B.last)/1000); B.last=ts; B.t+=B.dt; ctx.clearRect(0,0,c.width,c.height); // bg
+    ctx.fillStyle='#0c1024'; ctx.fillRect(0,0,c.width,c.height);
+    // center line
+    const cx=c.width*0.3; ctx.fillStyle='#86e1ff'; ctx.fillRect(cx-2*DPR,0,4*DPR,c.height);
+    // notes
+    ctx.fillStyle='#ff7a90'; for(const n of notes){ n.x -= (160+80*Math.sin(B.t))*B.dt*DPR*2; ctx.beginPath(); ctx.arc(n.x,n.y,8*DPR,0,Math.PI*2); ctx.fill(); }
+    // remove offscreen
+    for(let i=notes.length-1;i>=0;i--){ if(notes[i].x< -10) { notes.splice(i,1); my=Math.max(0,my-10); me.style.width=my+'%'; meT.textContent=Math.round(my)+'%'; } }
+    if(Math.random()<0.06) spawn();
+    if(my<=0){ box.close(); box.remove(); S.boss=false; S.running=false; end(false); document.removeEventListener('keydown', key); return; }
+    anim=requestAnimationFrame(step);
+  }
+  let anim=requestAnimationFrame(step);
+}
+
+// HUD update & timer
+function updateHUD(){ ui.scoreT.textContent=S.score; ui.scoreB.style.width=Math.min(100, S.score/20)+'%'; ui.streakT.textContent='x'+S.streak; ui.streakB.style.width=Math.min(100,S.streak*12)+'%'; ui.chaosT.textContent=Math.round(S.chaos); ui.chaosB.style.width=S.chaos+'%'; ui.timeT.textContent=fmt(S.time); ui.timeB.style.width=(S.time/180*100)+'%'; }
+function tick(){ if(!S.running||S.boss) return; if(S.freeze>0){ S.freeze--; updateHUD(); return; } S.time--; if(S.time%9===0) S.chaos=Math.min(100,S.chaos+1); if(S.time<=0){ end(true); } updateHUD(); }
+
+// Flow
+function start(){ S.score=0; S.streak=1; S.chaos=0; S.time=180; S.round=1; S.running=true; S.freeze=0; S.used={f:false,s:false,t:false,r:false}; ui.life5050.disabled=false; ui.lifeSkip.disabled=false; ui.lifeFreeze.disabled=false; ui.lifeReveal.disabled=false; ui.feed.innerHTML=''; updateHUD(); nextQuestion(); clearInterval(S.tick); S.tick=setInterval(tick,1000); S.started=Date.now(); }
+function end(win){ clearInterval(S.tick); const surv=((Date.now()-S.started)/1000)|0; const best=parseInt(localStorage.getItem('lsQbest')||'0',10); const hs=parseInt(localStorage.getItem('lsQhs')||'0',10); if(surv>best) localStorage.setItem('lsQbest', String(surv)); if(S.score>hs) localStorage.setItem('lsQhs', String(S.score)); ui.bestTime.textContent = fmt(parseInt(localStorage.getItem('lsQbest')||'0',10)); ui.bestScore.textContent = localStorage.getItem('lsQhs')||'0'; ui.endTitle.textContent = win?'W':'L'; ui.endText.textContent = win? 'Quiz überlebt. Flex.':'Laura hat dich geclapped. Try again.'; (win?sfx.win:sfx.lose)(); ui.end.showModal(); }
+
+// Utils
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; }
+
+// Bindings
+ui.soundBtn.addEventListener('click', ()=>{ if(!S.audio) initAudio(); S.sound=!S.sound; ui.soundBtn.setAttribute('aria-pressed', S.sound); ui.soundBtn.textContent = S.sound? '🔊 Sound':'🔈 Sound'; if(S.sound) sfx.click(); });
+ui.helpBtn.addEventListener('click', ()=> ui.help.showModal());
+ui.again.addEventListener('click', ()=>{ ui.end.close(); start(); });
+ui.restart.addEventListener('click', ()=> start());
+
+ui.life5050.addEventListener('click', use5050);
+ui.lifeSkip.addEventListener('click', useSkip);
+ui.lifeFreeze.addEventListener('click', useFreeze);
+ui.lifeReveal.addEventListener('click', useReveal);
+
+window.addEventListener('keydown', (e)=>{
+  if(e.key==='f' || e.key==='F') return use5050();
+  if(e.key==='s' || e.key==='S') return useSkip();
+  if(e.key==='t' || e.key==='T') return useFreeze();
+  if(e.key==='r' || e.key==='R') return useReveal();
+  const n=Number(e.key); if([1,2,3,4].includes(n)){ const btn=ui.choices.children[n-1]; if(btn) btn.click(); }
+});
+
+// Boot
+(function init(){ ui.bestTime.textContent = fmt(parseInt(localStorage.getItem('lsQbest')||'0',10)); ui.bestScore.textContent = localStorage.getItem('lsQhs')||'0'; start(); })();
+</script>
 </body>
 </html>
